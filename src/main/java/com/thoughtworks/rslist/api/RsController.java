@@ -41,4 +41,16 @@ public class RsController {
       RsEvent rsEvent = objectMapper.readValue(jsonString, RsEvent.class);
       rsList.add(rsEvent);
   }
+
+  @DeleteMapping("/rs/{index}")
+    public void should_delete_rsEvent(@PathVariable int index) {
+      //System.out.println("delete"+index);
+      rsList.remove(index-1);
+  }
+
+  @PatchMapping("/rs/list")
+  public List<RsEvent> should_change_reEvent(@RequestParam int id, @RequestParam String keyWord) {
+    rsList.get(id-1).setKeyWord(keyWord);
+    return rsList;
+  }
 }
