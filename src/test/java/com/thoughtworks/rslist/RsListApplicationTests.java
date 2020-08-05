@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import javax.xml.ws.Dispatch;
 
+import static com.fasterxml.jackson.databind.MapperFeature.USE_ANNOTATIONS;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -51,15 +52,18 @@ class RsListApplicationTests {
         mockMvc.perform(get("/rs/1"))
                 .andExpect(jsonPath("$.eventName", is("第一条事件")))
                 .andExpect(jsonPath("$.keyWord", is("无标签")))
+                .andExpect(jsonPath("$",not(hasKey("user"))))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/rs/2"))
                 .andExpect(jsonPath("$.eventName", is("第二条事件")))
                 .andExpect(jsonPath("$.keyWord", is("无标签")))
+                .andExpect(jsonPath("$",not(hasKey("user"))))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/rs/3"))
                 //.andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$.eventName", is("第三条事件")))
                 .andExpect(jsonPath("$.keyWord", is("无标签")))
+                .andExpect(jsonPath("$",not(hasKey("user"))))
                 .andExpect(status().isOk());
     }
 
@@ -187,12 +191,17 @@ class RsListApplicationTests {
 
     @Test
     public void should_add_newUser() throws Exception {
-        String jsonString = "{\"eventName\":\"addNewUser\",\"keyWord\":\"娱乐\",\"user\": {\"name\":\"newUser\"," +
-                "\"age\": 35,\"gender\": \"male\",\"email\": \"xzq@b.com\",\"phone\": \"12345678901\"}}";
+        User user = new User("newUser","male",35,"xzq@b.com","12345678901");
+        RsEvent rsEvent = new RsEvent("addNewUser","娱乐",user);
+//        String jsonString = "{\"eventName\":\"addNewUser\",\"keyWord\":\"娱乐\",\"user\": {\"name\":\"newUser\"," +
+//                "\"age\": 35,\"gender\": \"male\",\"email\": \"xzq@b.com\",\"phone\": \"12345678901\"}}";
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(USE_ANNOTATIONS, false);
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
         mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
-        mockMvc.perform(get("/user"))
-                .andExpect(jsonPath("$[-1].name", is("newUser")));
+        mockMvc.perform(get("/users"))
+                .andExpect(jsonPath("$[-1].user_name", is("newUser")));
     }
 
     @Test
@@ -201,8 +210,28 @@ class RsListApplicationTests {
                 "\"age\": 21,\"gender\": \"female\",\"email\": \"abcd@b.com\",\"phone\": \"11234567890\"}}";
         mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
-        mockMvc.perform(get("/user"))
-                .andExpect(jsonPath("$[-1].email", not("abcd@b.com")));
+        mockMvc.perform(get("/users"))
+                .andExpect(jsonPath("$[-1].user_email", not("abcd@b.com")));
     }
+
+    @Test
+    public void should_get_header_response () throws Exception {
+        String jsonString = "{\"eventName\":\"headerTest\",\"keyWord\":\"SpringBoot\",\"user\": {\"name\":\"hearUser\"," +
+                "\"age\": 21,\"gender\": \"female\",\"email\": \"abcd@b.com\",\"phone\": \"11234567890\"}}";
+        mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("index","5"));
+    }
+
+    @Test
+    public void should_show_all_users() throws Exception {
+        mockMvc.perform(get("/users"))
+                .andExpect(jsonPath("$[0].user_name", is("rsList")))
+                .andExpect(jsonPath("$[0].user_gender", is("female")))
+                .andExpect(jsonPath("$[0].user_email", is("rsListAdd@b.com")))
+                .andExpect(jsonPath("$[0].user_phone", is("17777777777")))
+                .andExpect(jsonPath("$[0].user_age", is(20)));
+    }
+
 
 }

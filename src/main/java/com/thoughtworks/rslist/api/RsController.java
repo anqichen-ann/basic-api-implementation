@@ -48,6 +48,14 @@ public class RsController {
     return ResponseEntity.ok(userList);
   }
 
+  @GetMapping("/users")
+  public ResponseEntity get_user_regular() {
+    int length = userList.size();
+    User[] myUserList = new User[length];
+    userList.toArray(myUserList);
+    return ResponseEntity.ok(myUserList);
+  }
+
   @PostMapping("/rs/event")
     public ResponseEntity should_add_rsEvent(@RequestBody @Valid RsEvent rsEvent) throws JsonProcessingException {
       User user = rsEvent.getUser();
@@ -62,13 +70,15 @@ public class RsController {
       if (!find) {
         userList.add(user);
       }
-    rsList.add(rsEvent);
-      return ResponseEntity.created(null).build();
+      rsList.add(rsEvent);
+      String indexString = (rsList.size()-1) + "";
+      return ResponseEntity.created(null).header("index",indexString).build();
   }
 
   @DeleteMapping("/rs/{index}")
-    public void should_delete_rsEvent(@PathVariable int index) {
+    public ResponseEntity should_delete_rsEvent(@PathVariable int index) {
       rsList.remove(index-1);
+      return ResponseEntity.ok(rsList);
   }
 
   @PatchMapping("/rs/list")
