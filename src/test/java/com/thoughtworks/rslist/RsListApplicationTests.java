@@ -1,5 +1,6 @@
 package com.thoughtworks.rslist;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -123,9 +124,19 @@ class RsListApplicationTests {
     @Test
     public void should_change_rslist() throws Exception {
         mockMvc.perform(patch("/rs/list?id=1&keyWord=case"))
-                //.andExpect(jsonPath("$[0].eventName", is("第一条事件")))
                 .andExpect(jsonPath("$[0].keyWord", is("case")))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void should_change_rsEvent_through_body() throws Exception {
+        RsEvent rsEvent = new RsEvent("股票崩了","经济");
+        String jsonString = new ObjectMapper().writeValueAsString(rsEvent);
+        mockMvc.perform(patch("rs/list/3").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[2].eventName", is("股票崩了")))
+                .andExpect(jsonPath("$[2].keyWord", is("经济")))
+                .andExpect(status().isOk());
+
     }
 
 }

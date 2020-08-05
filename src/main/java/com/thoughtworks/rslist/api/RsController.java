@@ -53,4 +53,14 @@ public class RsController {
     rsList.get(id-1).setKeyWord(keyWord);
     return rsList;
   }
+
+  @PatchMapping("/rs/list/{index}")
+  public List<RsEvent> should_change_rsEvent_through_body(@PathVariable int index, @RequestBody RsEvent rsEvent) {
+    String newName = rsEvent.getEventName();
+    String newKeyWord = rsEvent.getKeyWord();
+    RsEvent deRsEvent = rsList.get(index-1);
+    deRsEvent.setKeyWord(newKeyWord);
+    deRsEvent.setEventName(newName);
+    return rsList;
+  }
 }
