@@ -8,13 +8,13 @@ public class User {
     @NotNull
     @Size(max = 8)
     private String name;
-    @NotNull
+    @NotNull(message = "invalid gender")
     private String gender;
-    @NotNull
+    @NotNull(message = "invalid age")
     @Max(100)
     @Min(18)
     private int age;
-    @Email
+    @Email(message = "invalid email")
     private String email;
     @Pattern(regexp = "1\\d{10}")
     private String phone;
