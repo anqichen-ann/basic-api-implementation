@@ -10,12 +10,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 public class RsEventExceptionHandle {
-    @ExceptionHandler({RsEventNotValidException.class, MethodArgumentNotValidException.class})
+    @ExceptionHandler({RsEventNotValidException.class, MethodArgumentNotValidException.class, IndexOutOfBoundsException.class})
     public ResponseEntity invalid_index_handle(Exception e) {
         Error error = new Error();
         String errorMessage;
         if (e instanceof RsEventNotValidException) {
             errorMessage = ((RsEventNotValidException) e).getErrorMessage();
+        } else if (e instanceof IndexOutOfBoundsException) {
+            errorMessage = "invalid request param";
         } else {
             errorMessage = "invalid param";
         }
@@ -24,4 +26,5 @@ public class RsEventExceptionHandle {
 
 
     }
+
 }

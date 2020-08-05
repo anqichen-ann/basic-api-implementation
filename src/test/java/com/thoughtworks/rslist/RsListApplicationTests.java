@@ -92,6 +92,7 @@ class RsListApplicationTests {
                 .andExpect(status().isOk());
     }
 
+
     @Test
     @Order(4)
     public void should_add_new_rsEvent() throws Exception {
@@ -146,6 +147,14 @@ class RsListApplicationTests {
                 .andExpect(jsonPath("$[2].eventName", is("股票崩了")))
                 .andExpect(jsonPath("$[2].keyWord", is("经济")))
                 .andExpect(status().isOk());
+
+    }
+
+    @Test
+    public void should_throw_exception_get_list_between() throws Exception {
+        mockMvc.perform(get("/rs/list?start=0&end=2"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error",is("invalid request param")));
 
     }
 

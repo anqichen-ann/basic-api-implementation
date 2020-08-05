@@ -15,6 +15,7 @@ public class userController {
 
     @PostMapping("/user")
     public void user_register(@RequestBody @Valid User user) {
+
         userList.add(user);
     }
 
