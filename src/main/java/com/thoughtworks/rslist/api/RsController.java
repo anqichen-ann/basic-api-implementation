@@ -113,6 +113,19 @@ public class RsController {
     return ResponseEntity.ok(rsList);
   }
 
+  @PatchMapping("/rs/{rsEventId}")
+  public ResponseEntity should_update_rsEvent(@PathVariable int rsEventId, @RequestBody RsEvent rsEvent) {
+    RsEventDto rsEventDto = rsEventRepository.findById(rsEventId).get();
+    if (rsEventDto.getUserDto().getId() == rsEvent.getUserId()-1) {
+      rsEventDto.setEventName(rsEvent.getEventName());
+      rsEventDto.setKeyword(rsEvent.getKeyWord());
+      return ResponseEntity.ok().build();
+    }else {
+      return ResponseEntity.badRequest().build();
+    }
+
+  }
+
 }
 
 

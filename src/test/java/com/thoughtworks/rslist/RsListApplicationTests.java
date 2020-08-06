@@ -31,6 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import javax.xml.ws.Dispatch;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.fasterxml.jackson.databind.MapperFeature.USE_ANNOTATIONS;
 import static org.hamcrest.Matchers.*;
@@ -49,7 +50,6 @@ class RsListApplicationTests {
     UserRepository userRepository;
     @Autowired
     RsEventRepository rsEventRepository;
-    //@Autowired
     UserDto userDto;
 
     @BeforeEach
@@ -292,6 +292,24 @@ class RsListApplicationTests {
         String jsonString = "{\"eventName\":\"猪肉涨价啦\",\"keyWord\":\"经济\",\"userId\": 100 }";
         mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
+
+
+    }
+
+    @Test
+    public void should_update_rsEvent_when_rsEventId_match_userId() throws Exception {
+        RsEventDto oldRsEventDto = rsEventRepository.save(RsEventDto.builder().eventName("猪肉")
+                .keyword("经济").userDto(userDto).build());
+        RsEvent rsEvent = new RsEvent("乘风破浪","娱乐",userDto.getId());
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
+        objectMapper.configure(USE_ANNOTATIONS, false);
+        mockMvc.perform(patch("/rs/{rsEventId}",String.valueOf(oldRsEventDto.getId()))
+                .content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        RsEventDto newRsEvent = rsEventRepository.findById(oldRsEventDto.getId()).get();
+        assertEquals("乘风破浪", newRsEvent.getEventName());
+        assertEquals("娱乐", newRsEvent.getEventName());
 
 
     }
