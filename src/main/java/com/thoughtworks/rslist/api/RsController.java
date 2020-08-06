@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import javax.xml.crypto.Data;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,12 +21,25 @@ import static com.thoughtworks.rslist.domain.UserList.userList;
 @RestController
 public class RsController {
 
-  @GetMapping("/rs/list")
- public String get() {
-    return rsList.toString();
-  }
   private List<RsEvent> rsList = rsEventListInit();
-  public List<RsEvent> rsEventListInit() {
+
+    public RsController() throws SQLException {
+    }
+
+    public List<RsEvent> rsEventListInit() throws SQLException {
+      Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/rsSystem",
+              "root","");
+        DatabaseMetaData databaseMetaData = connection.getMetaData();
+        ResultSet resultSet = databaseMetaData.getTables(null,
+                null,"rsEvent",null);
+
+        if (!resultSet.next()) {
+            String createTableSql = "create table rsEvent(eventName varchar(20) not null, " +
+                    "keyword varchar(100) not null)";
+            Statement statement = connection.createStatement();
+            statement.execute(createTableSql);
+        }
+
     User user = new User("rsList","female",20,"rsListAdd@b.com","17777777777");
     userList.add(user);
     List<RsEvent> rsList = new ArrayList<>();
