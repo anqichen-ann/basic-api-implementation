@@ -49,7 +49,7 @@ class RsListApplicationTests {
     UserRepository userRepository;
     @Autowired
     RsEventRepository rsEventRepository;
-    @Autowired
+    //@Autowired
     UserDto userDto;
 
     @BeforeEach
@@ -125,12 +125,14 @@ class RsListApplicationTests {
     @Test
     @Order(4)
     public void should_add_new_rsEvent() throws Exception {
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        User user = new User("annie","female",20,"a@b.com","17777777777");
-//        RsEvent rsEvent = new RsEvent("猪肉涨价啦", "经济", user);
-//        String jsonString = objectMapper.writeValueAsString(rsEvent);
-        String jsonString = "{\"eventName\":\"猪肉涨价啦\",\"keyWord\":\"经济\",\"user\": {\"name\":\"ann\"," +
-                "\"age\": 19,\"gender\": \"female\",\"email\": \"a@b.com\",\"phone\": \"18888888888\"}}";
+        ObjectMapper objectMapper = new ObjectMapper();
+        User user = new User("annie","female",20,"a@b.com","17777777777");
+        RsEvent rsEvent = new RsEvent("猪肉涨价啦", "经济", 1);
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
+        objectMapper.configure(USE_ANNOTATIONS, false);
+
+//        String jsonString = "{\"eventName\":\"猪肉涨价啦\",\"keyWord\":\"经济\",\"user\": {\"name\":\"ann\"," +
+//                "\"age\": 19,\"gender\": \"female\",\"email\": \"a@b.com\",\"phone\": \"18888888888\"}}";
         mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
         mockMvc.perform(get("/rs/list")).andExpect(jsonPath("$", hasSize(4)))
