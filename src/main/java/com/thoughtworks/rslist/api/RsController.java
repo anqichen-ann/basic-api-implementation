@@ -1,5 +1,10 @@
 package com.thoughtworks.rslist.api;
 
+import com.thoughtworks.rslist.dto.RsEventDto;
+import com.thoughtworks.rslist.dto.UserDto;
+import com.thoughtworks.rslist.respository.RsEventRepository;
+import com.thoughtworks.rslist.respository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,6 +20,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static com.thoughtworks.rslist.domain.UserList.userList;
 
@@ -23,29 +29,22 @@ public class RsController {
 
   private List<RsEvent> rsList = rsEventListInit();
 
+  @Autowired
+  RsEventRepository rsEventRepository;
+  @Autowired
+  UserRepository userRepository;
+
     public RsController() throws SQLException {
     }
 
     public List<RsEvent> rsEventListInit() throws SQLException {
-      Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/rsSystem",
-              "root","");
-        DatabaseMetaData databaseMetaData = connection.getMetaData();
-        ResultSet resultSet = databaseMetaData.getTables(null,
-                null,"rsEvent",null);
-
-        if (!resultSet.next()) {
-            String createTableSql = "create table rsEvent(eventName varchar(20) not null, " +
-                    "keyword varchar(100) not null)";
-            Statement statement = connection.createStatement();
-            statement.execute(createTableSql);
-        }
 
     User user = new User("rsList","female",20,"rsListAdd@b.com","17777777777");
     userList.add(user);
     List<RsEvent> rsList = new ArrayList<>();
-     rsList.add(new RsEvent("第一条事件", "无标签", user));
-      rsList.add(new RsEvent("第二条事件", "无标签", user));
-      rsList.add(new RsEvent("第三条事件", "无标签", user));
+     rsList.add(new RsEvent("第一条事件", "无标签", 1));
+      rsList.add(new RsEvent("第二条事件", "无标签", 1));
+      rsList.add(new RsEvent("第三条事件", "无标签", 1));
     return rsList;
 
   }
@@ -81,21 +80,15 @@ public class RsController {
 
   @PostMapping("/rs/event")
     public ResponseEntity should_add_rsEvent(@RequestBody @Valid RsEvent rsEvent) throws JsonProcessingException {
-      User user = rsEvent.getUser();
-      String userName = user.getName();
-      Boolean find = false;
-      for (User us : userList) {
-        if (us.getName().equals(userName)) {
-          find = true;
-          break;
-        }
+    Optional<UserDto> userDto = userRepository.findById(rsEvent.getUserId());
+      if (!userDto.isPresent()) {
+        return ResponseEntity.badRequest().build();
       }
-      if (!find) {
-        userList.add(user);
-      }
-      rsList.add(rsEvent);
-      String indexString = (rsList.size()-1) + "";
-      return ResponseEntity.created(null).header("index",indexString).build();
+    RsEventDto rsEventDto = RsEventDto.builder().eventName(rsEvent.getEventName())
+            .keyword(rsEvent.getKeyWord()).userDto(userDto.get()).build();
+    rsEventRepository.save(rsEventDto);
+
+      return ResponseEntity.created(null).build();
   }
 
   @DeleteMapping("/rs/{index}")

@@ -2,6 +2,10 @@ package com.thoughtworks.rslist;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.dto.RsEventDto;
+import com.thoughtworks.rslist.dto.UserDto;
+import com.thoughtworks.rslist.respository.RsEventRepository;
+import com.thoughtworks.rslist.respository.UserRepository;
 import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +13,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -24,6 +30,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import javax.xml.ws.Dispatch;
 
+import java.util.List;
+
 import static com.fasterxml.jackson.databind.MapperFeature.USE_ANNOTATIONS;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -37,6 +45,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RsListApplicationTests {
     @Autowired
     MockMvc mockMvc;
+    @Autowired
+    UserRepository userRepository;
+    @Autowired
+    RsEventRepository rsEventRepository;
+    @Autowired
+    UserDto userDto;
+
+    @BeforeEach
+    void setUp() {
+        userDto = userRepository.save(UserDto.builder().email("a@b.com").age(19).gender("female")
+                .phone("18888888888").userName("ann").voteNum(10).build());
+        rsEventRepository.deleteAll();
+    }
 
     @Test
     @Order(1)
@@ -149,7 +170,7 @@ class RsListApplicationTests {
 
     @Test
     public void should_change_rsEvent_through_body() throws Exception {
-        RsEvent rsEvent = new RsEvent("股票崩了","经济", null);
+        RsEvent rsEvent = new RsEvent("股票崩了","经济", 1);
         String jsonString = new ObjectMapper().writeValueAsString(rsEvent);
         mockMvc.perform(patch("/rs/list/3").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[2].eventName", is("股票崩了")))
@@ -209,7 +230,7 @@ class RsListApplicationTests {
     @Test
     public void should_add_newUser() throws Exception {
         User user = new User("newUser","male",35,"xzq@b.com","12345678901");
-        RsEvent rsEvent = new RsEvent("addNewUser","娱乐",user);
+        RsEvent rsEvent = new RsEvent("addNewUser","娱乐",1);
 //        String jsonString = "{\"eventName\":\"addNewUser\",\"keyWord\":\"娱乐\",\"user\": {\"name\":\"newUser\"," +
 //                "\"age\": 35,\"gender\": \"male\",\"email\": \"xzq@b.com\",\"phone\": \"12345678901\"}}";
         ObjectMapper objectMapper = new ObjectMapper();
@@ -248,6 +269,29 @@ class RsListApplicationTests {
                 .andExpect(jsonPath("$[0].user_email", is("rsListAdd@b.com")))
                 .andExpect(jsonPath("$[0].user_phone", is("17777777777")))
                 .andExpect(jsonPath("$[0].user_age", is(20)));
+    }
+
+    @Test
+    public void should_add_new_rsEvent_when_user_exists() throws Exception {
+
+        String jsonString = "{\"eventName\":\"猪肉涨价啦\",\"keyWord\":\"经济\",\"userId\": " + userDto.getId() + "}";
+        mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+        List<RsEventDto> allRsEventDto =  rsEventRepository.findAll();
+        assertNotNull(allRsEventDto);
+        assertEquals("猪肉涨价啦", allRsEventDto.get(0).getEventName());
+        assertEquals("经济", allRsEventDto.get(0).getKeyword());
+        assertEquals(userDto.getId(), allRsEventDto.get(0).getUserDto().getId());
+
+    }
+
+    @Test
+    public void should_not_add_new_rsEvent_when_user_not_exists() throws Exception {
+        String jsonString = "{\"eventName\":\"猪肉涨价啦\",\"keyWord\":\"经济\",\"userId\": 100 }";
+        mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+
     }
 
 
