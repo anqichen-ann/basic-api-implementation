@@ -22,12 +22,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static com.thoughtworks.rslist.domain.UserList.userList;
-
 @RestController
 public class RsController {
-
-  private List<RsEvent> rsList = rsEventListInit();
 
   @Autowired
   RsEventRepository rsEventRepository;
@@ -37,88 +33,56 @@ public class RsController {
     public RsController() throws SQLException {
     }
 
-    public List<RsEvent> rsEventListInit() throws SQLException {
 
-    User user = new User("rsList","female",20,"rsListAdd@b.com","17777777777");
-    userList.add(user);
-    List<RsEvent> rsList = new ArrayList<>();
-     rsList.add(new RsEvent("第一条事件", "无标签", 1));
-      rsList.add(new RsEvent("第二条事件", "无标签", 1));
-      rsList.add(new RsEvent("第三条事件", "无标签", 1));
-    return rsList;
-
-  }
-
-  @GetMapping("/rs/{index}")
-    public ResponseEntity get_index_list(@PathVariable  int index) {
-      if (index <1 || index > rsList.size()) {
-        throw new RsEventNotValidException("invalid index");
+  @GetMapping("/rs/{rsEventId}")
+    public ResponseEntity get_index_list(@PathVariable  int rsEventId) {
+      Optional<RsEventDto> rsEventDto = rsEventRepository.findById(rsEventId);
+      if (!rsEventDto.isPresent()) {
+        throw new RsEventNotValidException("invalid rsEventId");
       }
-      return ResponseEntity.ok(rsList.get(index-1));
+      return ResponseEntity.ok(rsEventDto.get());
   }
 
-  @GetMapping("/rs/list")
-    public ResponseEntity get_list_between(@RequestParam(required = false) Integer start, @RequestParam(required = false) Integer end) {
-      if (start != null || end != null) {
-          return ResponseEntity.ok(rsList.subList(start-1,end));
-      }
-      return ResponseEntity.ok(rsList);
+  @GetMapping("/rsEvent")
+    public ResponseEntity get_rsEvent( ) {
+      return ResponseEntity.ok(rsEventRepository.findAll());
   }
 
-  @GetMapping("/user")
-  public ResponseEntity get_user() {
-    return ResponseEntity.ok(userList);
-  }
 
   @GetMapping("/users")
-  public ResponseEntity get_user_regular() {
-    int length = userList.size();
-    User[] myUserList = new User[length];
-    userList.toArray(myUserList);
-    return ResponseEntity.ok(myUserList);
+  public ResponseEntity get_all_user() {
+    return ResponseEntity.ok(userRepository.findAll());
   }
 
-  @PostMapping("/rs/event")
-    public ResponseEntity should_add_rsEvent(@RequestBody @Valid RsEvent rsEvent) throws JsonProcessingException {
+  @PostMapping("/rs/rsEvent")
+    public ResponseEntity should_add_rsEvent(@RequestBody RsEvent rsEvent) throws JsonProcessingException {
     Optional<UserDto> userDto = userRepository.findById(rsEvent.getUserId());
       if (!userDto.isPresent()) {
         return ResponseEntity.badRequest().build();
       }
-    RsEventDto rsEventDto = RsEventDto.builder().eventName(rsEvent.getEventName())
-            .keyword(rsEvent.getKeyWord()).userDto(userDto.get()).build();
+      RsEventDto rsEventDto = RsEventDto.builder()
+              .userDto(userDto.get())
+              .keyword(rsEvent.getKeyWord())
+              .eventName(rsEvent.getEventName())
+              .voteNum(rsEvent.getVoteNum())
+              .build();
     rsEventRepository.save(rsEventDto);
-
       return ResponseEntity.created(null).build();
   }
 
-  @DeleteMapping("/rs/{index}")
-    public ResponseEntity should_delete_rsEvent(@PathVariable int index) {
-      rsList.remove(index-1);
-      return ResponseEntity.ok(rsList);
-  }
 
-  @PatchMapping("/rs/list")
-  public ResponseEntity should_change_reEvent(@RequestParam int id, @RequestParam String keyWord) {
-    rsList.get(id-1).setKeyWord(keyWord);
-    return ResponseEntity.ok(rsList);
-  }
-
-  @PatchMapping("/rs/list/{index}")
-  public ResponseEntity should_change_rsEvent_through_body(@PathVariable int index, @RequestBody RsEvent rsEvent) {
-    String newName = rsEvent.getEventName();
-    String newKeyWord = rsEvent.getKeyWord();
-    RsEvent deRsEvent = rsList.get(index-1);
-    deRsEvent.setKeyWord(newKeyWord);
-    deRsEvent.setEventName(newName);
-    return ResponseEntity.ok(rsList);
-  }
 
   @PatchMapping("/rs/{rsEventId}")
-  public ResponseEntity should_update_rsEvent(@PathVariable int rsEventId, @RequestBody RsEvent rsEvent) {
+  public ResponseEntity should_update_rsEvent(@PathVariable int rsEventId, @RequestBody @Valid RsEvent rsEvent) {
     RsEventDto rsEventDto = rsEventRepository.findById(rsEventId).get();
-    if (rsEventDto.getUserDto().getId() == rsEvent.getUserId()-1) {
-      rsEventDto.setEventName(rsEvent.getEventName());
-      rsEventDto.setKeyword(rsEvent.getKeyWord());
+    if (rsEventDto.getUserDto().getId() == rsEvent.getUserId()) {
+      if (rsEvent.getEventName() != null) {
+        rsEventDto.setEventName(rsEvent.getEventName());
+      }
+      if (rsEvent.getKeyWord() != null) {
+        rsEventDto.setKeyword(rsEvent.getKeyWord());
+      }
+      rsEventRepository.save(rsEventDto);
       return ResponseEntity.ok().build();
     }else {
       return ResponseEntity.badRequest().build();
