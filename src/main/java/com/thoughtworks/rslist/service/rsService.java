@@ -7,11 +7,12 @@ import com.thoughtworks.rslist.dto.VoteDto;
 import com.thoughtworks.rslist.respository.RsEventRepository;
 import com.thoughtworks.rslist.respository.UserRepository;
 import com.thoughtworks.rslist.respository.VoteRepository;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-@Service
 public class rsService {
     final RsEventRepository rsEventRepository;
     final UserRepository userRepository;

@@ -8,6 +8,7 @@ import com.thoughtworks.rslist.respository.RsEventRepository;
 import com.thoughtworks.rslist.respository.UserRepository;
 import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -54,6 +55,7 @@ class RsListApplicationTests {
     UserDto userDto;
     RsEventDto rsEventDto;
     ObjectMapper objectMapper;
+
 
     @BeforeEach
     void setUp() {

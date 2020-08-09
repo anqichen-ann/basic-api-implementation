@@ -25,12 +25,13 @@ import java.util.Optional;
 @RestController
 public class RsController {
 
-  @Autowired
   RsEventRepository rsEventRepository;
-  @Autowired
   UserRepository userRepository;
 
-    public RsController() throws SQLException {
+    public RsController( RsEventRepository rsEventRepository, UserRepository userRepository) {
+      this.rsEventRepository = rsEventRepository;
+      this.userRepository = userRepository;
+
     }
 
 

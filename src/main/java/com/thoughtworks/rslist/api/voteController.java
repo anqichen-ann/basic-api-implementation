@@ -19,8 +19,11 @@ import java.util.stream.Collectors;
 
 @RestController
 public class voteController {
-    @Autowired
     VoteRepository voteRepository;
+
+    public voteController(VoteRepository voteRepository) {
+        this.voteRepository = voteRepository;
+    }
 
     @GetMapping("/voteRecord")
     public ResponseEntity<List<Vote>> should_get_record(@RequestParam int userId
